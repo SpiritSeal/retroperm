@@ -1,2 +1,2 @@
-# retroperm
-Platform-agnostic retroactive effective permission generation system for compiled executables built using angr
+# Retroperm
+A platform-agnostic retroactive effective permission generation system for compiled executables built using angr
