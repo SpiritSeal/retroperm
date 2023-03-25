@@ -12,3 +12,7 @@ class perm_finder:
     def __init__(self, executable: Path, working_dir: Path = None):
         self.executable = executable
         self.working_dir = working_dir if working_dir else executable.parent
+
+
+if __name__ == '__main__':
+    output = perm_finder(Path('../executables/open_example'))
