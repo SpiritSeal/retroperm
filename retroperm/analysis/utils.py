@@ -3,7 +3,7 @@ from typing import List
 import angr
 from angr.analyses import CompleteCallingConventionsAnalysis
 from angr.sim_type import SimTypeFunction
-from data import abusable_funcs
+# from data import abusable_funcs
 from utils_angrmgmt import string_at_addr
 
 
@@ -16,12 +16,12 @@ def get_arg_locations(func: angr.knowledge_plugins.functions.function.Function) 
 
     return func.arguments
 
-def is_abusable(func: angr.sim_procedure.SimProcedure) -> bool:
-    """
-    Check if a simproc function is in the abusable list
-    """
-    if func in abusable_funcs:
-        return True
+# def is_abusable(func: angr.sim_procedure.SimProcedure) -> bool:
+#     """
+#     Check if a simproc function is in the abusable list
+#     """
+#     if func in abusable_funcs:
+#         return True
 
 
 def get_abusable_arg_locations(func: angr.knowledge_plugins.functions.function.Function) -> \
