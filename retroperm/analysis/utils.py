@@ -5,6 +5,7 @@ from angr.analyses import CompleteCallingConventionsAnalysis
 from angr.sim_type import SimTypeFunction
 # from data import abusable_funcs
 from utils_angrmgmt import string_at_addr
+import pprint as pprint
 
 
 def get_arg_locations(func: angr.knowledge_plugins.functions.function.Function) -> \
@@ -38,6 +39,12 @@ def explore(obj: any):
     print(type(obj))
     print(obj)
     print(dir(obj))
+
+def explode(obj: any):
+    """
+    Explode the properties of an object
+    """
+    pprint(vars(obj))
 
 
 if __name__ == "__main__":
