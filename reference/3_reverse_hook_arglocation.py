@@ -2,7 +2,7 @@ import angr
 import pyvex
 
 from retroperm.analysis.utils import explode
-from utils import get_arg_locations, string_at_addr, explore
+from utils import get_arg_locations
 from data import important_func_args
 
 proj = angr.Project('../executables/open_example', auto_load_libs=False)
