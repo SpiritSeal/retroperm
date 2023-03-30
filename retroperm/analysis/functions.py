@@ -2,7 +2,7 @@ import inspect
 from typing import List
 
 import angr
-import resolver
+from . import resolver
 from pprint import pprint
 
 from reference.utils import explore
