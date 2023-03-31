@@ -1,6 +1,7 @@
 import angr
 import pyvex
 
+from reference.utils_angrmgmt import string_at_addr
 from retroperm.analysis.utils import explode
 from utils import get_arg_locations
 from data import important_func_args
@@ -43,4 +44,8 @@ for func in cfg.kb.functions.values():
                             print("target_arg_locations:", target_arg_locations)
                             important_args = [target_arg_locations[arg_num] for arg_num in important_arg_nums]
                             print("important_args:", important_args)
+
+                            # for reg in important_args:
+                            #     print("Found arg:", reg)
+                            #     print(string_at_addr(cfg, stmt.data.con.value, proj))
                 print()

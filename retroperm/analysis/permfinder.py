@@ -2,7 +2,7 @@ import angr
 from pathlib2 import Path
 
 
-class permFinder:
+class PermFinder:
     """
     Generate a list of permissions for a given binary
     :param executable: The path to the executable
@@ -18,5 +18,5 @@ class permFinder:
 
 
 if __name__ == '__main__':
-    output = permFinder('../../executables/open_example')
+    output = PermFinder('../../executables/open_example')
     print(output)

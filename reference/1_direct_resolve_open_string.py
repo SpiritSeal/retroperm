@@ -16,10 +16,13 @@ print("open_addr:", hex(open_addr))
 # List all of the calls in the binary that point to the open function
 open_call_blocks = []
 
+call_blocks = set()
+
 for func in cfg.kb.functions.values():
     for block in func.blocks:
         for instruction in block.capstone.insns:
             if instruction.mnemonic == 'call':
+                call_blocks.add(block.addr)
                 target = instruction.op_str
                 # Convert to int
                 try:
@@ -32,6 +35,8 @@ for func in cfg.kb.functions.values():
                     print("Found call to open at", hex(instruction.address))
                     open_call_blocks.append(block)
 
+print(call_blocks)
+exit()
 
 # Get calling convention
 ccca = proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis](recover_variables=True)
@@ -45,6 +50,7 @@ open_arg_locations = [arg.reg_name for arg in open_arg_locations]
 
 # Get the IR of the blocks that call the open function
 for block in open_call_blocks:
+    print(block.vex.pp())
     # print("Block at", hex(block.addr))
     # print(block.capstone.insns)
     # Filter for any PUTS statements that target a register in open_arg_locations
