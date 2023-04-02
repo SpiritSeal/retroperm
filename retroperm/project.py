@@ -25,7 +25,6 @@ class RetropermProject:
             str_val = string_at_addr(self.cfg, value, self.proj)
             # Strip double quotes
             return str_val[1:-1]
-        # elif reg_arg_type.__class__ == angr.sim_type.SimTypeInt:
         else:
             return value
 
@@ -33,14 +32,10 @@ class RetropermProject:
 
         resolved_data: Dict[angr.SimProcedure, ResolvedFunctionData] = {}
 
-        # For every abusable function in the binary
-        # -> Resolve the values of the arguments that are passed to the function
-
         proj = self.proj
         cfg = self.cfg
         ccca = self.ccca
 
-        # print(type(int.__class__))
         running_resolved_functions: Dict[angr.sim_procedure.SimProcedure: Dict[int, Dict[str, str | int]]] = {}
 
         for func in cfg.kb.functions.values():
@@ -64,7 +59,7 @@ class RetropermProject:
                 target_arg_locations = [arg.reg_name for arg in get_arg_locations(ccca.kb.functions[call_target])]
                 important_args = [target_arg_locations[arg_num] for arg_num in important_arg_nums]
 
-                # ordered_resolved_arguments
+                # ora stands for ordered_resolved_arguments
                 ora: List[int | str | None] = [None] * len(important_args)
                 for stmt in vex_block.statements:
                     if not isinstance(stmt, pyvex.stmt.Put):
