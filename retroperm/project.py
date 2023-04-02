@@ -67,13 +67,8 @@ class RetropermProject:
                     stmt: pyvex.stmt.Put
                     reg = proj.arch.register_names[stmt.offset]
                     if reg in important_args:
-                        # print(reg)
                         arg_num = important_args.index(reg)
                         ora[arg_num] = self.get_printable_value(simproc.prototype.args[arg_num], stmt.data.con.value)
-                        # print("Parent Class", simproc_prototype.args[arg_num].__class__.__base__)
-                        # print("Class", simproc_prototype.args[arg_num].__class__)
-                        #
-                        # print(self.get_printable_value(simproc_prototype.args[arg_num], stmt.data.con.value))
 
                 final_resolved_block = {}
                 for count, value in enumerate(ora):
