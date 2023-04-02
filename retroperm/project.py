@@ -1,96 +1,109 @@
-from typing import Dict
+from typing import Dict, List
 import angr
+from reference.utils_angrmgmt import string_at_addr
+from .analysis.utils import get_arg_locations, explore
+from .rules.data import important_func_args
+import pyvex
+
+import logging
+
+logging.getLogger('angr.analyses.reaching_definitions').setLevel(logging.FATAL)
+logging.getLogger('angr.project').setLevel(logging.FATAL)
+logging.getLogger('cle.loader').setLevel(logging.FATAL)
 
 
 class RetropermProject:
     def __init__(self, binary_path):
         self.binary_path = binary_path
+        self.proj = angr.Project(binary_path, auto_load_libs=False)
+        self.cfg = self.proj.analyses.CFGFast.prep()()
+        self.ccca = self.proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()(recover_variables=True)
+        self.resolved_data: Dict[angr.SimProcedure, ResolvedFunctionData] = {}
+
+    def get_printable_value(self, reg_arg_type: angr.sim_type.SimTypeReg, value: int) -> str or int:
+        if reg_arg_type.__class__ == angr.sim_type.SimTypePointer:
+            str_val = string_at_addr(self.cfg, value, self.proj)
+            # Strip double quotes
+            return str_val[1:-1]
+        # elif reg_arg_type.__class__ == angr.sim_type.SimTypeInt:
+        else:
+            return value
 
     def resolve_abusable_functions(self):
-        resolved_data = {}
+
+        resolved_data: Dict[angr.SimProcedure, ResolvedFunctionData] = {}
 
         # For every abusable function in the binary
         # -> Resolve the values of the arguments that are passed to the function
 
+        proj = self.proj
+        cfg = self.cfg
+        ccca = self.ccca
 
-        # Determine the abusable functions in the binary
-        from reference.utils_angrmgmt import string_at_addr
-        from retroperm.analysis.utils import explode
-        from utils import get_arg_locations, explore
-        from data import important_func_args
+        # print(type(int.__class__))
+        running_resolved_functions: Dict[angr.sim_procedure.SimProcedure: Dict[int, Dict[str, str | int]]] = {}
 
-        import logging
-
-        logging.getLogger('angr.analyses.reaching_definitions').setLevel(logging.FATAL)
-        logging.getLogger('angr.project').setLevel(logging.FATAL)
-        logging.getLogger('cle.loader').setLevel(logging.FATAL)
-
-        proj = angr.Project('../executables/open_example', auto_load_libs=False)
-        cfg = proj.analyses.CFGFast.prep()()
-        ccca = proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()(recover_variables=True)
-        s = proj.factory.blank_state(addr=0x4005e0)
-
-        call_blocks = set()
         for func in cfg.kb.functions.values():
             for block in func.blocks:
-                # handle blocks with no data
                 if block.size == 0:
                     continue
-                # Vex block
                 vex_block: pyvex.block.IRSB = block.vex
-                if (vex_block.jumpkind == 'Ijk_Call'):
-                    # print(vex_block)
-                    # print("Found call at", hex(block.addr))
-                    try:
-                        # print("Call goes to", vex_block.next.constants[0].value)
-                        call_target = vex_block.next.constants[0].value
-                    except:
-                        # print("Call goes to unknown address")
+                cur_addr = vex_block.addr
+                if vex_block.jumpkind != 'Ijk_Call' or len(vex_block.next.constants) == 0:
+                    continue
+                call_target = vex_block.next.constants[0].value
+                call_target_symbol = cfg.kb.functions.function(addr=call_target)
+                if call_target_symbol is None or not proj.is_symbol_hooked(call_target_symbol.name):
+                    continue
+                simproc = proj.symbol_hooked_by(call_target_symbol.name)
+                if not simproc or simproc.__class__ not in important_func_args:
+                    continue
+
+                important_arg_nums = important_func_args[simproc.__class__]
+
+                target_arg_locations = [arg.reg_name for arg in get_arg_locations(ccca.kb.functions[call_target])]
+                important_args = [target_arg_locations[arg_num] for arg_num in important_arg_nums]
+
+                # ordered_resolved_arguments
+                ora: List[int | str | None] = [None] * len(important_args)
+                for stmt in vex_block.statements:
+                    if not isinstance(stmt, pyvex.stmt.Put):
                         continue
+                    stmt: pyvex.stmt.Put
+                    reg = proj.arch.register_names[stmt.offset]
+                    if reg in important_args:
+                        # print(reg)
+                        arg_num = important_args.index(reg)
+                        ora[arg_num] = self.get_printable_value(simproc.prototype.args[arg_num], stmt.data.con.value)
+                        # print("Parent Class", simproc_prototype.args[arg_num].__class__.__base__)
+                        # print("Class", simproc_prototype.args[arg_num].__class__)
+                        #
+                        # print(self.get_printable_value(simproc_prototype.args[arg_num], stmt.data.con.value))
 
-                    call_target_symbol = cfg.kb.functions.function(addr=call_target)
+                final_resolved_block = {}
+                for count, value in enumerate(ora):
+                    final_resolved_block[important_arg_nums[count]] = value
 
-                    if call_target_symbol is not None:
-                        # Check if symbol is hooked
-                        if not proj.is_symbol_hooked(call_target_symbol.name):
-                            continue
-                        simproc = proj.symbol_hooked_by(call_target_symbol.name)
-                        if simproc:
-                            if simproc.__class__ in important_func_args:
-                                print("Important function:", simproc.__class__, important_func_args[simproc.__class__])
-                                important_arg_nums = important_func_args[simproc.__class__]
-                                # Get the calling convention of the target function
-                                target_arg_locations = get_arg_locations(ccca.kb.functions[call_target])
-                                target_arg_locations = [arg.reg_name for arg in target_arg_locations]
-                                important_args = [target_arg_locations[arg_num] for arg_num in important_arg_nums]
-                                print("important_args:", important_args)
+                if simproc not in running_resolved_functions:
+                    running_resolved_functions[simproc] = {}
+                running_resolved_functions[simproc][cur_addr] = final_resolved_block
 
-                                # Get simproc prototype
-                                simproc_prototype = simproc.prototype
-                                print("simproc_prototype:", simproc_prototype)
-                                print("simproc_prototype.args:", simproc_prototype.args)
-                                # explore(simproc_prototype.args[1])
-
-                                for stmt in vex_block.statements:
-                                    # print("stmt:", stmt)
-                                    if isinstance(stmt, pyvex.stmt.Put):
-                                        reg = proj.arch.register_names[stmt.offset]
-                                        # print(reg)
-                                        if reg in important_args:
-                                            print(reg)
-                                            # Find the argument number
-                                            arg_num = important_args.index(reg)
-                                            if simproc_prototype.args[
-                                                arg_num].__class__ == angr.sim_type.SimTypePointer:
-                                                print(string_at_addr(cfg, stmt.data.con.value, proj))
-                                            elif simproc_prototype.args[arg_num].__class__ == angr.sim_type.SimTypeInt:
-                                                print(hex(stmt.data.con.value))
-                                            else:
-                                                print("Unknown type:", simproc_prototype.args[arg_num].__class__)
-
+        for key, value in running_resolved_functions.items():
+            key: angr.sim_procedure.SimProcedure
+            resolved_data[key.display_name] = ResolvedFunctionData(key, value)
         return resolved_data
 
-class ResolvedFunction:
-    def __init__(self, resolved_function_address, args_by_location: Dict[int, Dict[str, str]]):
-        self.resolved_function_address = resolved_function_address
+class ResolvedFunctionData:
+    def __init__(self, resolved_function_name: angr.sim_procedure.SimProcedure,
+                 args_by_location: Dict[int, Dict[str, str]]):
+        # In args_by_location, the first key is the address of the call to the function
+        # The key of the nested dict is the function of the argument
+        # For example, if the function is open, the first nested dict key would be 'filename'
+        # The value of the nested dict is the value of the argument
+        self.resolved_function_name = resolved_function_name
         self.args_by_location = args_by_location
+
+    def __repr__(self):
+        # Example: {'open': <ResolvedFunction: open@[0xdeadbeef, 0xcafebabe, ...]>}
+        list_of_addresses = [hex(addr) for addr in list(self.args_by_location.keys())]
+        return f"<ResolvedFunction: {self.resolved_function_name.display_name}@{list_of_addresses}>"

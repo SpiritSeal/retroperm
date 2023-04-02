@@ -4,7 +4,7 @@ import angr
 from angr.analyses import CompleteCallingConventionsAnalysis
 from angr.sim_type import SimTypeFunction
 # from data import abusable_funcs
-from utils_angrmgmt import string_at_addr
+from .utils_angrmgmt import string_at_addr
 import pprint as pprint
 
 
