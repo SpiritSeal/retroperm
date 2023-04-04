@@ -19,7 +19,7 @@ class RetropermProject:
         self.binary_path = binary_path
         self.proj = angr.Project(binary_path, auto_load_libs=False)
         self.cfg = self.proj.analyses.CFGFast.prep()()
-        self.ccca = self.proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()(recover_variables=True)
+        self.ccca = self.proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()()
         self.resolved_data: Dict[angr.SimProcedure, ResolvedFunctionData] = {}
 
     def get_printable_value(self, reg_arg_type: angr.sim_type.SimTypeReg, value: int) -> str or int:

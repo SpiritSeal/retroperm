@@ -1,6 +1,6 @@
 from retroperm.project import RetropermProject
 
-retro_proj = RetropermProject("../executables/open_example")
+retro_proj = RetropermProject("../tests/executables/open_example")
 resolved_data = retro_proj.resolve_abusable_functions()
 print(resolved_data)
 
