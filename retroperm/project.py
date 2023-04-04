@@ -1,3 +1,5 @@
+import re
+from pprint import pprint
 from typing import Dict, List
 import angr
 from reference.utils_angrmgmt import string_at_addr
@@ -27,6 +29,13 @@ class RetropermProject:
             return str_val[1:-1]
         else:
             return value
+
+    def absolute_name(self, simproc: angr.sim_procedure):
+        print("Simproc", simproc)
+        print("Classname", simproc.__class__)
+        print("BEFORE", simproc.__class__.__name__)
+        print("ABSOLUTE KEY", re.sub('^angr.simproc', '', simproc.__class__.__name__))
+        return re.sub('^angr.simproc', '', simproc.__class__.__name__)
 
     def resolve_abusable_functions(self):
 
@@ -78,22 +87,26 @@ class RetropermProject:
                     running_resolved_functions[simproc] = {}
                 running_resolved_functions[simproc][cur_addr] = final_resolved_block
 
+                pprint(vars(simproc))
+
         for key, value in running_resolved_functions.items():
             key: angr.sim_procedure.SimProcedure
+            # resolved_data[self.absolute_name(key)] = ResolvedFunctionData(key, value)
             resolved_data[key.display_name] = ResolvedFunctionData(key, value)
         return resolved_data
 
+
 class ResolvedFunctionData:
-    def __init__(self, resolved_function_name: angr.sim_procedure.SimProcedure,
+    def __init__(self, resolved_function_simproc: angr.sim_procedure.SimProcedure,
                  args_by_location: Dict[int, Dict[str, str]]):
         # In args_by_location, the first key is the address of the call to the function
         # The key of the nested dict is the function of the argument
         # For example, if the function is open, the first nested dict key would be 'filename'
         # The value of the nested dict is the value of the argument
-        self.resolved_function_name = resolved_function_name
+        self.resolved_function_simproc = resolved_function_simproc
         self.args_by_location = args_by_location
 
     def __repr__(self):
         # Example: {'open': <ResolvedFunction: open@[0xdeadbeef, 0xcafebabe, ...]>}
         list_of_addresses = [hex(addr) for addr in list(self.args_by_location.keys())]
-        return f"<ResolvedFunction: {self.resolved_function_name.display_name}@{list_of_addresses}>"
+        return f"<ResolvedFunction: {self.resolved_function_simproc}@{list_of_addresses}>"
