@@ -1,4 +1,4 @@
-from rule import Rule
+from .rule import Rule
 from angr import SimProcedure
 from pathlib2 import Path
 import pathlib2 as pathlib
@@ -6,19 +6,27 @@ import pathlib2 as pathlib
 class FilesystemRule(Rule):
     """
     Filesystem rules.
-    :param is_whitelist: True if the rule is a whitelist.
-    :param is_blacklist: True if the rule is a blacklist.
-    :param simproc: The simproc this rule is associated with.
-    :param path: The path this rule is associated with.
-    :param operation: The filesystem operation (r/w/o) this rule is associated with.
     """
 
+    empty_whitelist = {
+        "dirs": [],
+        "files": []
+    }
+
+    # blacklist = {
+    #     "dirs": [],
+    #     "files": []
+    # }
+
     def __init__(self,
-                 simproc: SimProcedure,
-                 path: Path,
-                 operation: str,
-                 is_whitelist: bool = True,
-                 is_blacklist: bool = False):
-        super().__init__(is_whitelist, is_blacklist, simproc)
-        self.path = path
-        self.operation = operation
+                 location: str | Path,
+                 is_whitelist: bool,
+                 is_dir: bool):
+        self.location = location
+        self.is_whitelist = is_whitelist
+        self.is_dir = is_dir
+
+    def attach_to_project(self, project):
+        super().attach_to_project(project)
+        if "fs_whitelist" not in project.rules:
+            project.rules["fs_whitelist"] = self.whitelist

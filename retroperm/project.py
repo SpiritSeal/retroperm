@@ -3,6 +3,7 @@ import angr
 from reference.utils_angrmgmt import string_at_addr
 from .analysis.utils import get_arg_locations
 from .rules.data import important_func_args
+from .rules import Rule
 import pyvex
 
 import logging
@@ -13,6 +14,7 @@ logging.getLogger('cle.loader').setLevel(logging.FATAL)
 
 
 class RetropermProject:
+
     def __init__(self, binary_path):
         self.binary_path = binary_path
         self.proj = angr.Project(binary_path, auto_load_libs=False)
@@ -58,9 +60,7 @@ class RetropermProject:
                 important_func_list.append(func)
         return important_func_list
 
-
-    def resolve_function(self):
-        ...
+    def resolve_function(self): ...
 
     def resolve_abusable_functions(self):
 
@@ -116,6 +116,16 @@ class RetropermProject:
             key: angr.sim_procedure.SimProcedure
             resolved_data[key.display_name] = ResolvedFunctionData(key, value)
         return resolved_data
+
+
+    # Rule Stuff
+    def load_rules(self, rulelist: List[Rule]):
+        for rule in rulelist:
+            self.load_rule(rule)
+
+    def load_rule(self, rule: Rule):
+        ...
+
 
 
 class ResolvedFunctionData:
