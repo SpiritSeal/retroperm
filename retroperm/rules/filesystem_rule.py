@@ -13,7 +13,12 @@ class FilesystemRule(Rule):
     :param operation: The filesystem operation (r/w/o) this rule is associated with.
     """
 
-    def __init__(self, is_whitelist: bool, is_blacklist: bool, simproc: SimProcedure, path: Path, operation: str):
+    def __init__(self,
+                 simproc: SimProcedure,
+                 path: Path,
+                 operation: str,
+                 is_whitelist: bool = True,
+                 is_blacklist: bool = False):
         super().__init__(is_whitelist, is_blacklist, simproc)
         self.path = path
         self.operation = operation

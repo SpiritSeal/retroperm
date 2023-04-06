@@ -1,9 +1,7 @@
-import re
-from pprint import pprint
 from typing import Dict, List
 import angr
 from reference.utils_angrmgmt import string_at_addr
-from .analysis.utils import get_arg_locations, explore
+from .analysis.utils import get_arg_locations
 from .rules.data import important_func_args
 import pyvex
 
@@ -30,12 +28,39 @@ class RetropermProject:
         else:
             return value
 
-    def absolute_name(self, simproc: angr.sim_procedure):
-        print("Simproc", simproc)
-        print("Classname", simproc.__class__)
-        print("BEFORE", simproc.__class__.__name__)
-        print("ABSOLUTE KEY", re.sub('^angr.simproc', '', simproc.__class__.__name__))
-        return re.sub('^angr.simproc', '', simproc.__class__.__name__)
+    def is_abusable_function(self, func: angr.knowledge_plugins.functions.function.Function):
+        proj = self.proj
+        cfg = self.cfg
+        for block in func.blocks:
+            if block.size == 0:
+                continue
+            vex_block: pyvex.block.IRSB = block.vex
+            cur_addr = vex_block.addr
+            if vex_block.jumpkind != 'Ijk_Call' or len(vex_block.next.constants) == 0:
+                continue
+            call_target = vex_block.next.constants[0].value
+            call_target_symbol = cfg.kb.functions.function(addr=call_target)
+            if call_target_symbol is None or not proj.is_symbol_hooked(call_target_symbol.name):
+                continue
+            simproc = proj.symbol_hooked_by(call_target_symbol.name)
+            if not simproc or simproc.__class__ not in important_func_args:
+                continue
+            # If you are still here: congratulations, you matter
+            return True
+        return False
+
+    def get_abusable_functions(self):
+        cfg = self.cfg
+
+        important_func_list = []
+        for func in cfg.kb.functions.values():
+            if self.is_abusable_function(func):
+                important_func_list.append(func)
+        return important_func_list
+
+
+    def resolve_function(self):
+        ...
 
     def resolve_abusable_functions(self):
 
@@ -87,11 +112,8 @@ class RetropermProject:
                     running_resolved_functions[simproc] = {}
                 running_resolved_functions[simproc][cur_addr] = final_resolved_block
 
-                pprint(vars(simproc))
-
         for key, value in running_resolved_functions.items():
             key: angr.sim_procedure.SimProcedure
-            # resolved_data[self.absolute_name(key)] = ResolvedFunctionData(key, value)
             resolved_data[key.display_name] = ResolvedFunctionData(key, value)
         return resolved_data
 
