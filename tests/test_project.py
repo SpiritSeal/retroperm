@@ -14,7 +14,7 @@ class TestProject(unittest.TestCase):
     def test_function_resolver(self):
         # return
         retro_proj = RetropermProject(TEST_BINARIES / "open_example")
-        resolved_data = retro_proj.raf()
+        resolved_data = retro_proj.resolve_abusable_functions()
         # print("resolved data", resolved_data)
         res_func = resolved_data['open']
         print("open func", res_func.args_by_location)

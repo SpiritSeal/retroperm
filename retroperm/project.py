@@ -5,7 +5,6 @@ from .analysis.utils import get_arg_locations
 from .rules.data import important_func_args
 from .rules import Rule, default_rules
 import pyvex
-# from .rules
 
 import logging
 
@@ -34,6 +33,10 @@ class RetropermProject:
             return value
 
     def is_abusable_function(self, func: angr.knowledge_plugins.functions.function.Function):
+        """
+        :param func: Checks if the function makes a call to a function in the abusable functions list
+        :return: Block of the call
+        """
         proj = self.proj
         cfg = self.cfg
         for block in func.blocks:
@@ -52,6 +55,7 @@ class RetropermProject:
                 continue
             # If you are still here: congratulations, you matter apparently
             return True
+            # return block
         return False
 
     def get_abusable_functions(self):
@@ -59,11 +63,13 @@ class RetropermProject:
 
         important_func_list = []
         for func in cfg.kb.functions.values():
-            if self.is_abusable_function(func):
-                important_func_list.append(func)
+            print(func)
+            if not self.is_abusable_function(func):
+                continue
+            important_func_list.append(func)
         return important_func_list
 
-    def resolve_function(self, func: angr.knowledge_plugins.functions.function.Function):
+    def resolve_function_call_block(self, func: angr.knowledge_plugins.functions.function.Function):
 
         proj = self.proj
         cfg = self.cfg
@@ -131,7 +137,7 @@ class RetropermProject:
             # # call_target = vex_block.next.constants[0].value
             # call_target_symbol = cfg.kb.functions.function(addr=call_target)
             # simproc = proj.symbol_hooked_by(call_target_symbol.name)
-            self.resolve_function(func)
+            self.resolve_function_call_block(func)
 
     def resolve_abusable_functions(self):
 
@@ -160,9 +166,12 @@ class RetropermProject:
                     continue
 
                 important_arg_nums = important_func_args[simproc.__class__]
+                print(important_arg_nums)
 
                 target_arg_locations = [arg.reg_name for arg in get_arg_locations(ccca.kb.functions[call_target])]
                 important_args = [target_arg_locations[arg_num] for arg_num in important_arg_nums]
+
+                print(f'{important_arg_nums=}')
 
                 # ora stands for ordered_resolved_arguments
                 ora: List[int | str | None] = [None] * len(important_args)
@@ -196,6 +205,10 @@ class RetropermProject:
     def load_rules(self, rule_list: List[Rule]):
         # Add the rules to the self.rules
         self.rules |= rule_list
+
+
+    # def validate_rule(self, rule: Rule):
+
 
     def validate_rules(self, rule_list=None):
         if rule_list:
