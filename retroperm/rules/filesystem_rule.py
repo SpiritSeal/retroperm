@@ -16,8 +16,7 @@ class FilesystemRule(Rule):
                  arg_cat: str,  # argument_category
                  is_whitelist: bool,
                  is_dir: bool):
-        super().__init__()
-        self.arg_cat = arg_cat
+        super().__init__(arg_cat)
         self.location = location
         self.is_whitelist = is_whitelist
         self.is_dir = is_dir
