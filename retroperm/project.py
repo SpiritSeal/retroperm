@@ -1,7 +1,7 @@
 from typing import Dict, List
 import angr
-from reference.utils_angrmgmt import string_at_addr
 from .analysis.utils import get_arg_locations
+from .analysis.utils_angrmgmt import string_at_addr
 from .rules.data import important_func_args
 from .rules import Rule, default_rules
 import pyvex

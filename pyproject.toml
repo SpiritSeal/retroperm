@@ -1,6 +1,6 @@
 [project]
 name = "retroperm"
-version = "0.0.1"
+version = "0.0.3"
 authors = [
   { name="Saketh Reddy", email="yssaketh@gmail.com" },
 ]
