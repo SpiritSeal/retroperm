@@ -55,6 +55,9 @@ class RetropermProject:
                 if call_target_symbol is None or not proj.is_symbol_hooked(call_target_symbol.name):
                     continue
                 simproc = proj.symbol_hooked_by(call_target_symbol.name)
+                # TODO: Remove after doing something about the way the things are stored in the lookup table
+                # TODO: / create new extended "pass" Simprocs to catch the new targets (see logbook 04-13-23)
+                print(call_target_symbol.name, simproc)
                 if not simproc or simproc.__class__ not in important_func_args:
                     continue
 
@@ -114,7 +117,7 @@ class RetropermProject:
                 raise ValueError('No rules to validate')
             rule_list = self.rules
         output = {}
-        for rule in self.rules:
+        for rule in rule_list:
             output[rule] = self.validate_rule(rule)
 
         return output
