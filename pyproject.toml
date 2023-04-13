@@ -1,0 +1,18 @@
+[project]
+name = "retroperm"
+version = "0.0.1"
+authors = [
+  { name="Saketh Reddy", email="yssaketh@gmail.com" },
+]
+description = "A retroactive effective binary permission deduction tool"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/SpiritSeal/retroperm"
+"Bug Tracker" = "https://github.com/SpiritSeal/retroperm/issues"

@@ -1,5 +1,4 @@
 import sys
-from contextlib import redirect_stderr
 from pathlib import Path
 
 import unittest
