@@ -59,12 +59,9 @@ class RetropermProject:
                     continue
 
                 important_arg_nums = important_func_args[simproc.__class__]
-                print(important_arg_nums)
 
                 target_arg_locations = [arg.reg_name for arg in get_arg_locations(ccca.kb.functions[call_target])]
                 important_args = [target_arg_locations[arg_num] for arg_num in important_arg_nums]
-
-                print(f'{important_arg_nums=}')
 
                 # ora stands for ordered_resolved_arguments
                 ora: List[int | str | None] = [None] * len(important_args)
@@ -100,9 +97,16 @@ class RetropermProject:
         # Add the rules to the self.rules
         self.rules |= rule_list
 
-    def validate_rule(self, rule: Rule):
-        output = rule.validate_batch(self.resolved_data)
-        return output
+    def validate_rule(self, rule: Rule) -> str:
+        output: Dict[str, bool] = rule.validate_batch(self.resolved_data)
+        fails = []
+        for key, value in output.items():
+            if not value:
+                fails.append(key)
+        if fails:
+            return f'Failed on {fails}'
+        else:
+            return 'Passed'
 
     def validate_rules(self, rule_list=None):
         if not rule_list:
@@ -119,8 +123,6 @@ class RetropermProject:
 class ResolvedFunctionObject:
 
     def generate_argument_categories(self):
-        # Generate a list of the argument types
-        # Example: ['int', 'const char *', 'int']
         argument_types = set()
         for key, value in self.args_by_location.items():
             for arg_type, arg_value in value.items():
@@ -129,15 +131,10 @@ class ResolvedFunctionObject:
 
     def __init__(self, resolved_function_simproc: angr.sim_procedure.SimProcedure,
                  args_by_location: Dict[int, Dict[str, str]]):
-        # In args_by_location, the first key is the address of the call to the function
-        # The key of the nested dict is the function of the argument
-        # For example, if the function is open, the first nested dict key would be 'filename'
-        # The value of the nested dict is the value of the argument
         self.resolved_function_simproc = resolved_function_simproc
         self.args_by_location = args_by_location
         # print(self.args_by_location)
         self.argument_types = self.generate_argument_categories()
-        print(self.argument_types)
 
     def __repr__(self):
         # Example: {'open': <ResolvedFunction: open@[0xdeadbeef, 0xcafebabe, ...]>}

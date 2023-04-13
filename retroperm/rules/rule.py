@@ -23,13 +23,13 @@ class Rule:
     #     """
     #     ...
 
-    def validate_batch(self, resolved_data: Dict) -> bool:
+    def validate_batch(self, resolved_data: Dict):
         """
         Validate the rule against the resolved data.
         """
         raise NotImplementedError
 
-    def validate(self, resolved_function_obj) -> bool:
+    def validate(self, resolved_function_obj):
         """
         Validate the rule against a single resolved function.
         """
