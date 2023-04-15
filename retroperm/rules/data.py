@@ -28,4 +28,3 @@ important_func_args = {
     # # listen: [0: int sockfd, 1: int backlog]
     # angr.SIM_PROCEDURES['posix']['listen']().__class__: {0: 'sockfd', 1: 'backlog'},
 }
-

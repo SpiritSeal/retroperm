@@ -1,15 +1,14 @@
 from typing import Dict
-# from .rule import Rule
-from .category_rule import CategoryRule
+from .rule import Rule
 from pathlib2 import Path
 import pathlib2 as pathlib
 
 from ..project import ResolvedFunctionObject
 
 
-class FilesystemRule(CategoryRule):
+class NetworkRule(Rule):
     """
-    Filesystem rules.
+    Network rules.
     """
 
     def __init__(self,
@@ -33,10 +32,13 @@ class FilesystemRule(CategoryRule):
         """
         Validate the rule against the resolved data.
         """
-        output: dict[str, bool] = {}
+        output: dict[str, bool | None] = {}
         for key, rfo in resolved_data.items():
-            if self.validate(rfo):
-                # Redundant for now, but will be useful later
+            validation_state = self.validate(rfo)
+            if validation_state is None:
+                output[key] = None
+                # print(f'Rule {self} did not apply to {key}!')
+            elif validation_state is True:
                 output[key] = True
                 # print(f'Rule {self} passed on {key}!')
             else:
@@ -44,7 +46,7 @@ class FilesystemRule(CategoryRule):
                 # print(f'Rule {self} failed on {key}!')
         return output
 
-    def validate(self, rfo: ResolvedFunctionObject) -> bool:
+    def validate(self, rfo: ResolvedFunctionObject) -> bool | None:
         """
         Validate the rule against a single resolved function.
         """
@@ -69,4 +71,4 @@ class FilesystemRule(CategoryRule):
             else:
                 raise NotImplementedError
         # If you don't show up in the args, you're not a problem
-        return True
+        return None

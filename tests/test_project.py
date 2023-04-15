@@ -46,6 +46,9 @@ class TestProject(unittest.TestCase):
         output = retro_proj.validate_rules()
         print(output)
 
+    def test_banhammer(self):
+        pass
+
 
 if __name__ == "__main__":
     unittest.main(argv=sys.argv)
