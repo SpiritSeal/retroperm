@@ -5,6 +5,7 @@ import unittest
 
 from retroperm.project import RetropermProject
 from retroperm.rules.filesystem_rule import FilesystemRule
+from retroperm.rules.ban_library_function_rule import BanLibraryFunctionRule
 
 TEST_BINARIES = Path(__file__).parent / "executables"
 
@@ -16,7 +17,7 @@ class TestProject(unittest.TestCase):
         retro_proj = RetropermProject(TEST_BINARIES / "open_example")
         resolved_data = retro_proj.resolve_abusable_functions()
         # print("resolved data", resolved_data)
-        res_func = resolved_data['open']
+        res_func = resolved_data['resolved_function_data']['open']
         print("open func", res_func.args_by_location)
 
         assert res_func.args_by_location[0x40120c]['filename'] == '/etc/passwd'
@@ -37,7 +38,7 @@ class TestProject(unittest.TestCase):
         retro_proj = RetropermProject(TEST_BINARIES / "open_example")
         resolved_data = retro_proj.resolve_abusable_functions()
         # print("resolved data", resolved_data)
-        res_func = resolved_data['open']
+        res_func = resolved_data['resolved_function_data']['open']
         print(res_func.args_by_location[0x40122a]['filename'])
 
         my_rule_good = FilesystemRule('/home/mahaloz/.global.bsconf', 'filename', is_whitelist=True, is_dir=False)
@@ -47,6 +48,11 @@ class TestProject(unittest.TestCase):
         print(output)
 
     def test_banhammer(self):
+        retro_proj = RetropermProject(TEST_BINARIES / "open_example")
+        ban_open = BanLibraryFunctionRule('open')
+
+        retro_proj.init_rules([ban_open], override_default=True)
+
         pass
 
 

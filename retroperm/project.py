@@ -20,9 +20,10 @@ class RetropermProject:
         self.proj = angr.Project(binary_path, auto_load_libs=False)
         self.cfg = self.proj.analyses.CFGFast.prep()()
         self.ccca = self.proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()()
-        self.resolved_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
         self.rules = set()
+        self.resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
         self.resolved_function_data = None
+        self.resolved_project_data: Dict[str, object] = {}
 
     def get_printable_value(self, reg_arg_type: angr.sim_type.SimTypeReg, value: int) -> str or int:
         if reg_arg_type.__class__ == angr.sim_type.SimTypePointer:
@@ -32,14 +33,21 @@ class RetropermProject:
         else:
             return value
 
-    def resolve_abusable_functions(self):
+    def create_active_symbol_list(self) -> List[str]:
+        proj = self.proj
 
-        resolved_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
+        active_symbols = []
+        for symbol in proj.loader.main_object.symbols:
+            if proj.is_symbol_hooked(symbol.name):
+                active_symbols.append(symbol.name)
+        return active_symbols
 
+    def resolve_defined_simproc_args(self):
         proj = self.proj
         cfg = self.cfg
         ccca = self.ccca
 
+        resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
         running_resolved_functions: Dict[angr.sim_procedure.SimProcedure: Dict[int, Dict[str, str | int]]] = {}
 
         for func in cfg.kb.functions.values():
@@ -51,6 +59,7 @@ class RetropermProject:
                 if vex_block.jumpkind != 'Ijk_Call' or len(vex_block.next.constants) == 0:
                     continue
                 call_target = vex_block.next.constants[0].value
+                # TODO: Transport this to below
                 call_target_symbol = cfg.kb.functions.function(addr=call_target)
                 if call_target_symbol is None or not proj.is_symbol_hooked(call_target_symbol.name):
                     continue
@@ -87,9 +96,13 @@ class RetropermProject:
 
         for key, value in running_resolved_functions.items():
             key: angr.sim_procedure.SimProcedure
-            resolved_data[key.display_name] = ResolvedFunctionObject(key, value)
-        self.resolved_data = resolved_data
-        return resolved_data
+            resolved_function_data[key.display_name] = ResolvedFunctionObject(key, value)
+        self.resolved_function_data = resolved_function_data
+        return resolved_function_data
+
+    def resolve_abusable_functions(self):
+        self.resolved_project_data['resolved_function_data'] = self.resolve_defined_simproc_args()
+        return self.resolved_project_data
 
     # Rule Stuff
     def init_rules(self, rule_list: List[Rule], override_default=False):
@@ -101,7 +114,7 @@ class RetropermProject:
         self.rules |= rule_list
 
     def validate_rule(self, rule: Rule) -> str:
-        output: Dict[str, bool] = rule.validate_batch(self.resolved_data)
+        output: Dict[str, bool] = rule.validate_batch(self.resolved_function_data)
         fails = []
         for key, value in output.items():
             if not value:
@@ -125,6 +138,9 @@ class RetropermProject:
 
 class ResolvedFunctionObject:
 
+    def generate_active_symbol_table(self, proj: angr.project.Project):
+        pass
+
     def generate_argument_categories(self):
         argument_types = set()
         for key, value in self.args_by_location.items():
@@ -143,3 +159,18 @@ class ResolvedFunctionObject:
         # Example: {'open': <ResolvedFunction: open@[0xdeadbeef, 0xcafebabe, ...]>}
         list_of_addresses = [hex(addr) for addr in list(self.args_by_location.keys())]
         return f"<ResolvedFunction: {self.resolved_function_simproc}@{list_of_addresses}>"
+
+
+class ResolvedProjectData:
+    def __init__(self, rfo: ResolvedFunctionObject):
+        self.resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
+
+
+
+
+
+
+
+
+
+
