@@ -1,13 +1,13 @@
 from typing import Dict
 # from .rule import Rule
-from .category_rule import CategoryRule
+from .argument_rule import ArgumentRule
 from pathlib2 import Path
 import pathlib2 as pathlib
 
 from ..project import ResolvedFunctionObject
 
 
-class FilesystemRule(CategoryRule):
+class FilesystemRule(ArgumentRule):
     """
     Filesystem rules.
     """
@@ -29,14 +29,16 @@ class FilesystemRule(CategoryRule):
         # Format as "Whitelist: /etc/passwd"
         return f'{"Whitelist" if self.is_whitelist else "Blacklist"} {self.location}'
 
-    def validate_batch(self, resolved_data: Dict[str, ResolvedFunctionObject]) -> Dict:
+    # def validate(self, resolved_data: Dict[str, ResolvedFunctionObject]) -> Dict:
+    def validate(self, resolved_project_data: Dict[str, object]) -> Dict:
         """
         Validate the rule against the resolved data.
         """
+        resolved_function_data = resolved_project_data['resolved_function_data']
         output: dict[str, bool] = {}
-        for key, rfo in resolved_data.items():
-            if self.validate(rfo):
-                # Redundant for now, but will be useful later
+        for key, rfo in resolved_function_data.items():
+            if self.validate_rfo(rfo):
+                # Redundant for now, but will maybe be useful later
                 output[key] = True
                 # print(f'Rule {self} passed on {key}!')
             else:
@@ -44,7 +46,7 @@ class FilesystemRule(CategoryRule):
                 # print(f'Rule {self} failed on {key}!')
         return output
 
-    def validate(self, rfo: ResolvedFunctionObject) -> bool:
+    def validate_rfo(self, rfo: ResolvedFunctionObject) -> bool:
         """
         Validate the rule against a single resolved function.
         """

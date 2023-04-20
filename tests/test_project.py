@@ -49,11 +49,14 @@ class TestProject(unittest.TestCase):
 
     def test_banhammer(self):
         retro_proj = RetropermProject(TEST_BINARIES / "open_example")
-        ban_open = BanLibraryFunctionRule('open')
 
+        retro_proj.resolve_abusable_functions()
+
+        ban_open = BanLibraryFunctionRule('open')
         retro_proj.init_rules([ban_open], override_default=True)
 
-        pass
+        output = retro_proj.validate_rules()
+        print(output)
 
 
 if __name__ == "__main__":

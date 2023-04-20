@@ -1,7 +1,9 @@
-from typing import Dict, List
+from typing import Dict, List, Set
 import angr
 from .analysis.utils import get_arg_locations
 from .analysis.utils_angrmgmt import string_at_addr
+from .rules.argument_rule import ArgumentRule
+from .rules.ban_library_function_rule import BanLibraryFunctionRule
 from .rules.data import important_func_args
 from .rules import Rule, default_rules
 import pyvex
@@ -23,7 +25,9 @@ class RetropermProject:
         self.rules = set()
         self.resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
         self.resolved_function_data = None
+        self.called_symbols: Set[str] | None = None
         self.resolved_project_data: Dict[str, object] = {}
+        # self.resolved_project_data: ResolvedProjectData = None
 
     def get_printable_value(self, reg_arg_type: angr.sim_type.SimTypeReg, value: int) -> str or int:
         if reg_arg_type.__class__ == angr.sim_type.SimTypePointer:
@@ -33,14 +37,26 @@ class RetropermProject:
         else:
             return value
 
-    def create_active_symbol_list(self) -> List[str]:
+    def create_called_symbols_list(self) -> Set[str]:
         proj = self.proj
+        cfg = self.cfg
 
-        active_symbols = []
-        for symbol in proj.loader.main_object.symbols:
-            if proj.is_symbol_hooked(symbol.name):
-                active_symbols.append(symbol.name)
-        return active_symbols
+        called_symbols = set()
+        # for symbol in proj.loader.main_object.symbols:
+        #     if proj.is_symbol_hooked(symbol.name):
+        #         called_symbols.append(symbol.name)
+        for func in cfg.kb.functions.values():
+            for block in func.blocks:
+                if block.size == 0:
+                    continue
+                vex_block: pyvex.block.IRSB = block.vex
+                cur_addr = vex_block.addr
+                if vex_block.jumpkind != 'Ijk_Call' or len(vex_block.next.constants) == 0:
+                    continue
+                call_target = vex_block.next.constants[0].value
+                called_symbols.add(cfg.kb.functions.function(addr=call_target))
+        self.called_symbols = called_symbols
+        return called_symbols
 
     def resolve_defined_simproc_args(self):
         proj = self.proj
@@ -66,7 +82,7 @@ class RetropermProject:
                 simproc = proj.symbol_hooked_by(call_target_symbol.name)
                 # TODO: Remove after doing something about the way the things are stored in the lookup table
                 # TODO: / create new extended "pass" Simprocs to catch the new targets (see logbook 04-13-23)
-                print(call_target_symbol.name, simproc)
+                # print(call_target_symbol.name, simproc)
                 if not simproc or simproc.__class__ not in important_func_args:
                     continue
 
@@ -101,7 +117,9 @@ class RetropermProject:
         return resolved_function_data
 
     def resolve_abusable_functions(self):
+
         self.resolved_project_data['resolved_function_data'] = self.resolve_defined_simproc_args()
+        self.resolved_project_data['active_symbols'] = self.create_called_symbols_list()
         return self.resolved_project_data
 
     # Rule Stuff
@@ -114,15 +132,23 @@ class RetropermProject:
         self.rules |= rule_list
 
     def validate_rule(self, rule: Rule) -> str:
-        output: Dict[str, bool] = rule.validate_batch(self.resolved_function_data)
-        fails = []
-        for key, value in output.items():
-            if not value:
-                fails.append(key)
-        if fails:
-            return f'Failed on {fails}'
+
+        if isinstance(rule, ArgumentRule):
+            output: Dict[str, bool] = rule.validate(self.resolved_function_data)
+            fails = []
+            for key, value in output.items():
+                if not value:
+                    fails.append(key)
+            if fails:
+                return f'Failed on {fails}'
+            else:
+                return 'Passed'
+        elif isinstance(rule, BanLibraryFunctionRule):
+            return 'Passed' if rule.validate(self.resolved_project_data) else 'Failed'
+        elif isinstance(rule, Rule):
+            raise NotImplementedError
         else:
-            return 'Passed'
+            raise ValueError('Rule not recognized')
 
     def validate_rules(self, rule_list=None):
         if not rule_list:
@@ -137,9 +163,6 @@ class RetropermProject:
 
 
 class ResolvedFunctionObject:
-
-    def generate_active_symbol_table(self, proj: angr.project.Project):
-        pass
 
     def generate_argument_categories(self):
         argument_types = set()
@@ -161,9 +184,11 @@ class ResolvedFunctionObject:
         return f"<ResolvedFunction: {self.resolved_function_simproc}@{list_of_addresses}>"
 
 
-class ResolvedProjectData:
-    def __init__(self, rfo: ResolvedFunctionObject):
-        self.resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
+# TODO: Implement this in order to make the code more readable and easier to work with
+# class ResolvedProjectData:
+#     def __init__(self, rfo: ResolvedFunctionObject = None, called_symbols: List[str] = None):
+#         self.resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
+#         self.active_symbols: List[str] = []
 
 
 

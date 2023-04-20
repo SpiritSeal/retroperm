@@ -28,13 +28,13 @@ class NetworkRule(Rule):
         # Format as "Whitelist: /etc/passwd"
         return f'{"Whitelist" if self.is_whitelist else "Blacklist"} {self.location}'
 
-    def validate_batch(self, resolved_data: Dict[str, ResolvedFunctionObject]) -> Dict:
+    def validate(self, resolved_data: Dict[str, ResolvedFunctionObject]) -> Dict:
         """
         Validate the rule against the resolved data.
         """
         output: dict[str, bool | None] = {}
         for key, rfo in resolved_data.items():
-            validation_state = self.validate(rfo)
+            validation_state = self.validate_rfo(rfo)
             if validation_state is None:
                 output[key] = None
                 # print(f'Rule {self} did not apply to {key}!')
@@ -46,7 +46,7 @@ class NetworkRule(Rule):
                 # print(f'Rule {self} failed on {key}!')
         return output
 
-    def validate(self, rfo: ResolvedFunctionObject) -> bool | None:
+    def validate_rfo(self, rfo: ResolvedFunctionObject) -> bool | None:
         """
         Validate the rule against a single resolved function.
         """
