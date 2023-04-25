@@ -3,6 +3,7 @@ import angr
 from .analysis.utils import get_arg_locations
 from .analysis.utils_angrmgmt import string_at_addr
 from .rules.argument_rule import ArgumentRule
+from .rules.ban_category_rule import BanCategoryRule
 from .rules.ban_library_function_rule import BanLibraryFunctionRule
 from .rules.data import important_func_args
 from .rules import Rule, default_rules
@@ -145,6 +146,8 @@ class RetropermProject:
                 return 'Passed'
         elif isinstance(rule, BanLibraryFunctionRule):
             return 'Passed' if rule.validate(self.resolved_project_data) else 'Failed'
+        elif isinstance(rule, BanCategoryRule):
+            return f'Failed on {rule.validate(self.resolved_project_data)}' if rule.validate(self.resolved_project_data) else 'Passed'
         elif isinstance(rule, Rule):
             raise NotImplementedError
         else:

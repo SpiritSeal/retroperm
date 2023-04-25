@@ -6,6 +6,7 @@ import unittest
 from retroperm.project import RetropermProject
 from retroperm.rules.filesystem_rule import FilesystemRule
 from retroperm.rules.ban_library_function_rule import BanLibraryFunctionRule
+from retroperm.rules.ban_category_rule import BanCategoryRule
 
 TEST_BINARIES = Path(__file__).parent / "executables"
 
@@ -53,8 +54,18 @@ class TestProject(unittest.TestCase):
         retro_proj.resolve_abusable_functions()
 
         ban_open = BanLibraryFunctionRule('open')
+        # TODO: Ban Categories
         retro_proj.init_rules([ban_open], override_default=True)
 
+        output = retro_proj.validate_rules()
+        print(output)
+
+    def test_category_banhammer(self):
+        retro_proj = RetropermProject(TEST_BINARIES / "open_example")
+        retro_proj.resolve_abusable_functions()
+        ban_filesystem = BanCategoryRule('filesystem')
+        ban_network = BanCategoryRule('network')
+        retro_proj.init_rules([ban_filesystem, ban_network], override_default=True)
         output = retro_proj.validate_rules()
         print(output)
 

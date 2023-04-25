@@ -1,4 +1,5 @@
 import angr
+from .ban_library_function_rule import BanLibraryFunctionRule
 
 important_func_args = {
     # Filesystem Rules
@@ -27,4 +28,14 @@ important_func_args = {
     # angr.SIM_PROCEDURES['posix']['sendto']().__class__: {0: 'sockfd', 1: 'buf', 2: 'len', 3: 'flags', 4: 'dest_addr', 5: 'addrlen'},
     # # listen: [0: int sockfd, 1: int backlog]
     # angr.SIM_PROCEDURES['posix']['listen']().__class__: {0: 'sockfd', 1: 'backlog'},
+}
+
+ban_lib_categories = {
+    'filesystem': {
+        BanLibraryFunctionRule('open'),
+        BanLibraryFunctionRule('fopen'),
+    },
+    'network': {
+        BanLibraryFunctionRule('socket'),
+    },
 }

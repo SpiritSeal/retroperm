@@ -11,7 +11,7 @@ class BanLibraryFunctionRule(Rule):
         super().__init__()
 
     def __repr__(self):
-        return f"Banhammer {self.banned_library}"
+        return f"Banned Library {self.banned_library}"
 
     # def validate_batch(self, resolved_data: Dict):
     #     """
