@@ -8,6 +8,7 @@ from .rules.ban_library_function_rule import BanLibraryFunctionRule
 from .rules.data import important_func_args
 from .rules import Rule, default_rules
 import pyvex
+from sortedcollections import OrderedSet
 
 import logging
 
@@ -22,8 +23,11 @@ class RetropermProject:
         self.binary_path = binary_path
         self.proj = angr.Project(binary_path, auto_load_libs=False)
         self.cfg = self.proj.analyses.CFGFast.prep()()
-        self.ccca = self.proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()()
-        self.rules = set()
+        try:
+            self.ccca = self.proj.analyses[angr.analyses.CompleteCallingConventionsAnalysis].prep()()
+        except:
+            self.ccca = None
+        self.rules = OrderedSet()
         self.resolved_function_data: Dict[angr.SimProcedure, ResolvedFunctionObject] = {}
         self.resolved_function_data = None
         self.called_symbols: Set[str] | None = None
@@ -42,7 +46,7 @@ class RetropermProject:
         proj = self.proj
         cfg = self.cfg
 
-        called_symbols = set()
+        called_symbols = OrderedSet()
         # for symbol in proj.loader.main_object.symbols:
         #     if proj.is_symbol_hooked(symbol.name):
         #         called_symbols.append(symbol.name)
@@ -101,7 +105,13 @@ class RetropermProject:
                     reg = proj.arch.register_names[stmt.offset]
                     if reg in important_args:
                         arg_num = important_args.index(reg)
+                        if not hasattr(stmt.data, "con"):
+                            continue
+                        # try:
                         ora[arg_num] = self.get_printable_value(simproc.prototype.args[arg_num], stmt.data.con.value)
+                        # except:
+                        #     print('FAILED ON', stmt)
+                        #     exit(1)
 
                 final_resolved_block = {}
                 for count, value in enumerate(ora):
@@ -126,7 +136,7 @@ class RetropermProject:
     # Rule Stuff
     def init_rules(self, rule_list: List[Rule], override_default=False):
         # Add the rules to the self.rules
-        self.rules = set(rule_list if override_default else (rule_list and default_rules))
+        self.rules = OrderedSet(rule_list if override_default else (rule_list and default_rules))
 
     def load_rules(self, rule_list: List[Rule]):
         # Add the rules to the self.rules
@@ -135,7 +145,7 @@ class RetropermProject:
     def validate_rule(self, rule: Rule) -> str:
 
         if isinstance(rule, ArgumentRule):
-            output: Dict[str, bool] = rule.validate(self.resolved_function_data)
+            output: Dict[str, bool] = rule.validate(self.resolved_project_data)
             fails = []
             for key, value in output.items():
                 if not value:
@@ -168,7 +178,7 @@ class RetropermProject:
 class ResolvedFunctionObject:
 
     def generate_argument_categories(self):
-        argument_types = set()
+        argument_types = OrderedSet()
         for key, value in self.args_by_location.items():
             for arg_type, arg_value in value.items():
                 argument_types.add(arg_type)
