@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Upload Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+        }
+        #header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        #content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            margin-top: 0;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            margin-right: 10px;
+        }
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        input[type="submit"] {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #555;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+    <!--  import styles from style.css  -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="header">
+        <h1>File Upload Example</h1>
+    </div>
+    <div id="content">
+        {% if submitted %}
+            <p>File uploaded. Running backend function...</p>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <br>
+            <input type="checkbox" name="option1" value="true">
+            <label for="option1">Option 1</label>
+            <input type="checkbox" name="option2" value="true">
+            <label for="option2">Option 2</label>
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+        {% if submitted %}
+            <p>Result:</p>
+            <div id="result"></div>
+            <script>
+                // Use a Promise to wait for the backend function to complete
+                fetch('/result')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('result').innerHTML = html;
+                    });
+            </script>
+        {% endif %}
+    </div>
+</body>
+</html>
