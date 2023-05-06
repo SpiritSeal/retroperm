@@ -2,6 +2,7 @@ from typing import Dict
 # from .rule import Rule
 from .argument_rule import ArgumentRule
 from pathlib2 import Path
+# import pathlib2 as pathlib
 import pathlib2 as pathlib
 
 from ..project import ResolvedFunctionObject
@@ -56,34 +57,14 @@ class FilesystemRule(ArgumentRule):
             if self.arg_cat is 'filename':
                 if self.is_whitelist:
                     if self.is_dir:
-                        if pathlib.Path(self.location).is_dir():
-                            if pathlib.Path(res_args[self.arg_cat]).is_dir():
-                                if pathlib.Path(self.location) in pathlib.Path(res_args[self.arg_cat]).parents:
-                                    return True
-                                else:
-                                    continue
-                            else:
-                                if pathlib.Path(self.location) in pathlib.Path(res_args[self.arg_cat]).parent:
-                                    return True
-                                else:
-                                    continue
+                        pass
                     if self.location == res_args[self.arg_cat]:
                         return True
                     else:
                         continue
                 else:
                     if self.is_dir:
-                        if pathlib.Path(self.location).is_dir():
-                            if pathlib.Path(res_args[self.arg_cat]).is_dir():
-                                if pathlib.Path(self.location) in pathlib.Path(res_args[self.arg_cat]).parents:
-                                    return False
-                                else:
-                                    continue
-                            else:
-                                if pathlib.Path(self.location) in pathlib.Path(res_args[self.arg_cat]).parent:
-                                    return False
-                                else:
-                                    continue
+                        pass
                     if self.location == res_args[self.arg_cat]:
                         return False
                     else:
