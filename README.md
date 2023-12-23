@@ -1,5 +1,5 @@
 # Retroperm
-A platform-agnostic retroactive system resource usage deduction library for retroactively generating "permissions" used by executable programs from their compiled binaries.
+A platform-agnostic system resource usage deduction library for retroactively generating "permissions" used by executable programs from their compiled binaries.
 
 ## Developer Install
 ```sh 
