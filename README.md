@@ -2,6 +2,13 @@
 A platform-agnostic system resource usage deduction library for retroactively generating "permissions" used by executable programs from their compiled binaries.
 
 ## Usage
+
+Install Retroperm from PyPI
+
+```sh
+pip install retroperm
+```
+
 > WIP. See the [tests](./tests) directory for examples.
 
 ## Developer Install
