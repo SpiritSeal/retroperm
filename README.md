@@ -5,13 +5,13 @@ In other words: A library to figure out what system resources (specific files, n
 
 ## Usage
 
-Install Retroperm from PyPI
+### Install Retroperm from PyPI
 
 ```sh
 pip install retroperm
 ```
 
-## Initialize Retroperm Project
+### Initialize Retroperm Project
 
 ```py
 from retroperm import Retroperm
@@ -19,7 +19,7 @@ from retroperm import Retroperm
 retroperm_proj = Retroperm("path/to/binary")
 ```
 
-## Initialize Rules
+### Initialize Rules
 
 > [Full list of implemented rule types](./documentation/avaliable_rules.md)
 
@@ -33,12 +33,12 @@ blacklist_etc_passwd_rule = FilesystemRule("/etc/passwd", 'filename', is_whiteli
 # Define a rule that blacklists all network access
 blacklist_all_network_calls_rule = BanCategoryRule('network')
 
+# Load rules into project
 rule_list = [blacklist_etc_passwd_rule, blacklist_all_network_calls_rule]
-
 retroperm_proj.load_rules(rule_list)
 ```
 
-## Run Retroperm Analysis
+### Run Retroperm Analysis
 
 ```py
 results = retroperm_proj.validate_rules()
