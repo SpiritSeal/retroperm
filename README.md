@@ -1,5 +1,7 @@
 # Retroperm
-A platform-agnostic system resource usage deduction library for retroactively generating "permissions" used by executable programs from their compiled binaries.
+A platform-agnostic rule-based system resource usage deduction library for retroactively generating "permissions" used by executable programs from their compiled binaries.
+
+In other words: A library to figure out what system resources (specific files, network call targets, IO, etc.) any executable (.exe, ELF, etc) may attempt to use when run. Define rules for the resources you would like to monitor as privacy violations and `retroperm` will return potential violations of those rules.
 
 ## Usage
 
