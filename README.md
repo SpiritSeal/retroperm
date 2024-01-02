@@ -27,7 +27,7 @@ retroperm_proj = Retroperm("path/to/binary")
 from retroperm.rules.filesystem_rule import FilesystemRule
 from retroperm.rules.ban_library_function_rule import BanLibraryFunctionRule
 
-# Define a rule that blacklists all filesystem access to /etc/passwd
+# Define a rule that blacklists filesystem access to /etc/passwd
 blacklist_etc_passwd_rule = FilesystemRule("/etc/passwd", 'filename', is_whitelist=False, is_dir=False)
 
 # Define a rule that blacklists all network access
