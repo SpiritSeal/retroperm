@@ -41,6 +41,7 @@ retroperm_proj.load_rules(rule_list)
 ### Run Retroperm Analysis
 
 ```py
+retroperm_proj.resolve_abusable_functions()
 results = retroperm_proj.validate_rules()
 print(results)
 ```
