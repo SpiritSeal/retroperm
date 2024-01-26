@@ -14,9 +14,9 @@ pip install retroperm
 ### Initialize Retroperm Project
 
 ```py
-from retroperm import Retroperm
+from retroperm.project import RetropermProject
 
-retroperm_proj = Retroperm("path/to/binary")
+retroperm_proj = RetropermProject("path/to/binary")
 ```
 
 ### Initialize Rules
