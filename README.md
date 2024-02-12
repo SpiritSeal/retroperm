@@ -3,6 +3,8 @@ A platform-agnostic rule-based system resource usage deduction library for retro
 
 In other words: A library to figure out what system resources (specific files, network call targets, IO, etc.) any executable (.exe, ELF, etc) may attempt to use when run. Define rules for the resources you would like to monitor and `retroperm` will return potential violations of those rules.
 
+Technical Writeup: https://colab.research.google.com/drive/1vNTgV7hJ9M12SzLpSiDcskSP_rMPsPrd
+
 ## Usage
 
 ### Install Retroperm from PyPI
